@@ -1,7 +1,7 @@
 // download list of nouns
 // be able to pull up wiki page into readable form
 
-#include "fuckkkkkk.h"
+#include "main.h"
 
 #include <filesystem>
 #include <fstream>
