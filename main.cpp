@@ -1,12 +1,19 @@
 // download list of nouns
 // be able to pull up wiki page into readable form
+#define PY_SSIZE_T_CLEAN
+// #include <Python.h>
 
 #include "main.h"
 
+#include <stdlib.h>
+
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <queue>
+#include <sstream>
+#include <string>
 
 using namespace std;
 
@@ -46,7 +53,7 @@ void sortnoun(string pathh, string changeto) {
       try {
         std::ifstream src(entry.path(), std::ios::binary);
         std::ofstream dst("./onlynoun/" + name + ".txt", std::ios::binary);
-        //std::cout<< " moved "<< name<<endl;
+        // std::cout<< " moved "<< name<<endl;
         dst << src.rdbuf();
         // src.close();
         // dst.close();
@@ -56,6 +63,26 @@ void sortnoun(string pathh, string changeto) {
       }
     }
   }
+}
+
+void clean() {
+  int count = 0;
+  for (const auto &entry : filesystem::directory_iterator("./onlynoun")) {
+    
+    if (entry.file_size() < 1000) {
+      remove(entry.path());
+      count++;
+    }
+    // FILE *fp = fopen((string)entry.path());
+    // fseek(fp, 0, SEEK_END);  // seek to end
+    // if (ftell(fp) < 100) {
+    //   remove((string)entry.path());
+    //   count++;
+    // } else {
+    //   fclose(fp);
+    // }
+  }
+  cout<< "killed " << count<< " files"<<endl;
 }
 
 string remove_punct(const string &str) {
@@ -82,7 +109,8 @@ vector<string> wiki::getpage(const string &pagename) {
   return out;
 }
 
-wiki::wiki(const vector<string> &pagenamen) {
+wiki::wiki(const vector<string> &pagenamen, int num) {
+  mynum = num;
   sizee = pagenamen.size();
   cout << sizee << endl;
   grid.resize(sizee);
@@ -162,14 +190,14 @@ float sumvec(vector<float> v) {
   return toreturn;
 }
 
-vector<string> wiki::retruneight() {
+vector<string> wiki::retruneight(float &sum) {
   vector<string> toreturn;
   // vector<vector<pair<float, int>>> weightgrid;
   map<float, vector<int>> pathh;
 
   for (int i = 0; i < grid.size();
        i++) {  //+= weight of things added to see whats the nextt best
-    
+
     vector<bool> seen(grid.size(), false);
     vector<int> temp;
     vector<float> currvec = grid[i];
@@ -239,6 +267,7 @@ vector<string> wiki::retruneight() {
   cout << " sum " << pathh.begin()->first << endl;
   stringstream s;
   s << "chosen: ";
+  sum = pathh.begin()->first;
   for (auto i : pathh.begin()->second) {
     s << allpages[i]->name << " -> ";
     toreturn.push_back(allpages[i]->name);
@@ -305,82 +334,38 @@ pair<vector<int>, float> wiki::bfsnarrow(vector<int> start, float tsum,
   return pair<vector<int>, float>(toreturn, tsum);
 }
 
-pair<vector<int>, float> wiki::bfs(vector<int> start, float tsum) {
-  vector<int> toreturn;
-  map<float, bool> seensums;
-  queue<vector<int>> tocheck;
-  queue<vector<bool>> seen;
-  queue<float> sums;
-  vector<int> temp;
-  temp.push_back(start[0]);
-  tocheck.push(temp);
-  vector<bool> tempo(grid.size(), false);
-  tempo[start[0]] = true;
-  seen.push(tempo);
-  sums.push(0);
-
-  while (!tocheck.empty()) {
-    // printveci(tocheck.front());
-
-    if (tocheck.front().size() < mynum && sums.front() < tsum) {
-      vector<int> curr = tocheck.front();
-      float currsum = sums.front();
-      vector<bool> currseen = seen.front();
-      for (int i = 0; i < grid.size(); i++) {
-        if (currseen[i] == false) {
-          float tempsum = currsum;
-          for (int k = 0; k < curr.size(); k++) {
-            tempsum += grid[curr[k]][i];
-          }
-
-          if (tempsum < tsum && seensums.find(tempsum) == seensums.end()) {
-            seensums[tempsum] = true;
-            vector<int> newpath = curr;
-            newpath.push_back(i);
-            vector<bool> newseen = currseen;
-            newseen[i] = true;
-            if (newpath.size() == mynum) {
-              // printveci(newpath);
-              tsum = tempsum;
-              toreturn = newpath;
-            } else {
-              seen.push(newseen);
-              sums.push(tempsum);
-              tocheck.push(newpath);
-            }
-          }
-        }
-      }
-    }
-    tocheck.pop();
-    sums.pop();
-    seen.pop();
-  }
-
-  // cout<< " tsum " << tsum<<endl;
-  return pair<vector<int>, float>(toreturn, tsum);
-}
-
 int main() {
   vector<string> inputwords;
-  //sortnoun("./wiki-nouns", "./onlynoun");
-  // int count = 0;
+  clean();
+  // sortnoun("./wiki-nouns", "./onlynoun");
+  //  int count = 0;
+
   string path = "./onlynoun";
-  int count = 200; 
+  int count = 50;
+  float ceiling = 999999;
+  float temp;
+  vector<string> curr;
   for (const auto &entry : filesystem::directory_iterator(path)) {
-    count --;
+    count--;
     inputwords.push_back(entry.path());
-    cout << entry.path() << endl;
+    // cout << entry.path() << endl;
     if (count == 0) {
-      break;
+      wiki mywiki = wiki(inputwords, 7);
+      vector<string> out = mywiki.retruneight(temp);
+      if (temp < ceiling) {
+        ceiling = temp;
+        cout << "floor ->" << ceiling << endl;
+        for (int i = 0; i < inputwords.size(); i++) {
+          curr.push_back(inputwords[i]);
+        }
+      }
+      count = 50;
+      inputwords.clear();
     }
   }
 
-  if (inputwords.size() ==0) {
-
-    return 0;  }
-  wiki mywiki = wiki(inputwords);
-  vector<string> out = mywiki.retruneight();
+  wiki mywiki = wiki(curr, 7);
+  vector<string> out = mywiki.retruneight(temp);
   for (int i = 0; i < out.size(); i++) {
     cout << "@ i " << i << " = " << out[i] << endl;
   }

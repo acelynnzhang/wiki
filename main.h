@@ -40,9 +40,9 @@ struct page {
 
 class wiki {
  public:
-  wiki(const vector<string>& pagenames);
+  wiki(const vector<string>& pagenames, int num);
     vector<vector<float>> getgrid() { return grid; }
-    vector<string> retruneight();
+    vector<string> retruneight(float &sum);
     
  private:
  // void genmap();
