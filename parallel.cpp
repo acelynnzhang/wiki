@@ -70,36 +70,36 @@ wiki::wiki(const vector<string> &pagenames) {
   // }
 }
 
- void wiki::compare(vector<vector<int>> grid, page* page) {
-    // for (auto i : allpages) {  // other pages
-    //   int countcommonwords = 0;
-    //   for (auto j : i->words) {  // interate through map of other page
-    //     string currword = j.first;
-    //     ////cout << currword << endl;
-    //     if (currword == name) {
-    //       countcommonwords = -1;
-    //       break;
-    //     }
-    //     if (curr->words.find(currword) != curr->words.end()) {
-    //       grid[curr->id][i->id] +=
-    //           curr->words[currword] / static_cast<float>(curr->pglength) +
-    //           j.second / static_cast<float>(i->pglength);
-    //       grid[i->id][curr->id] +=
-    //           curr->words[currword] / static_cast<float>(curr->pglength) +
-    //           j.second / static_cast<float>(i->pglength);
-    //       countcommonwords++;
-    //     }
-    //   }
-    //   if (countcommonwords != -1) {  // if contains name
-    //     grid[curr->id][i->id] *= countcommonwords;
-    //     grid[i->id][curr->id] *= countcommonwords;
-    //   } else {
-    //     grid[curr->id][i->id] = 9999999;
-    //     grid[i->id][curr->id] = 9999999;
-    //   }
-    //   grid[curr->id][curr->id] = 9999999;
-    //   // //cout << " = " << grid[i->id * curr->id] << endl;
-    // }
+ void wiki::compare(vector<vector<int>> grid, page* curr) {
+    for (auto i : allpages) {  // other pages
+      int countcommonwords = 0;
+      for (auto j : i->words) {  // interate through map of other page
+        string currword = j.first;
+        ////cout << currword << endl;
+        if (currword == name) {
+          countcommonwords = -1;
+          break;
+        }
+        if (curr->words.find(currword) != curr->words.end()) {
+          grid[curr->id][i->id] +=
+              curr->words[currword] / static_cast<float>(curr->pglength) +
+              j.second / static_cast<float>(i->pglength);
+          grid[i->id][curr->id] +=
+              curr->words[currword] / static_cast<float>(curr->pglength) +
+              j.second / static_cast<float>(i->pglength);
+          countcommonwords++;
+        }
+      }
+      if (countcommonwords != -1) {  // if contains name
+        grid[curr->id][i->id] *= countcommonwords;
+        grid[i->id][curr->id] *= countcommonwords;
+      } else {
+        grid[curr->id][i->id] = 9999999;
+        grid[i->id][curr->id] = 9999999;
+      }
+      grid[curr->id][curr->id] = 9999999;
+      // //cout << " = " << grid[i->id * curr->id] << endl;
+    }
  }
 
 
