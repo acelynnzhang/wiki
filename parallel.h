@@ -8,14 +8,17 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <filesystem>
+#include <queue>
+#include <thread>
 
 using namespace std;
 struct page {
-  string name;
+  string noun;
   int id;
   map<string, int> words;
   int pglength;
-  page(string name_, vector<string> intomap) : name(name_) {
+  page(string noun_, vector<string> intomap) : noun(noun_) {
     pglength = intomap.size();
     for (auto i : intomap) {
       string temp;
@@ -38,6 +41,12 @@ struct page {
   }
 };
 
+struct arg_struct {
+  int id;
+  string pgname;
+  arg_struct(int id_, string pgname_): id(id_), pgname(pgname_){};
+};
+
 class wiki {
  public:
   wiki(const vector<string>& pagenames);
@@ -51,12 +60,9 @@ class wiki {
   vector<float> gridd;
   vector<vector<float>> grid;  // 2d grid of intersections(same words) of pages
   vector<string> getpage(const string &pagename);
-  int sizee;
+  int num_pgs;
   vector<page*> allpages;
   int mynum = 7;
-  void compare(vector<vector<int>> grid, string pagename);
-  void *pg_init(void * arg);
-  static void* do_pg_init(void * arg) {
-    return static_cast<wiki*>(arg)->pg_init(arg);
-  }
+  void compare(vector<vector<int>> grid, page* page);
+  void *pg_init(arg_struct* args);
 };

@@ -3,18 +3,9 @@
 
 #include "parallel.h"
 
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <queue>
-#include <pthread.h>
-
 using namespace std;
 
-struct arg_struct {
-  int id;
-  string pgname;
-};
+
 
 string remove_punct(const string &str) {
   string ret;
@@ -48,60 +39,67 @@ string wiki::extract_word(string prev_name) {
 }
 
 
-void *wiki::pg_init(void *args) {
-  struct arg_struct *fields = args;
-  string page_name = fields->pgname;
+void *wiki::pg_init(arg_struct* args) {
+  string page_name = args->pgname;
+  int id = args->id;
   string noun = extract_word(page_name);
   vector<string> contents = getpage(page_name);
   page *curr = new page(noun, contents);
-  allpages.push_back(curr);
+  curr->id = id;
+  allpages[id] = curr; 
+  return NULL;
 }
 
 
 wiki::wiki(const vector<string> &pagenames) {
-  const int num_pgs = pagenames.size();
-  cout << num_pgs << endl;
+  num_pgs = pagenames.size();
   grid.resize(num_pgs);
-  pthread_t threads[num_pgs];
+  allpages.resize(num_pgs);
+  thread threads[num_pgs];
   for (size_t k = 0; k < num_pgs; k++) {
-    string *pgname = new string(pagenames[k]);
-    pthread_create(&threads[k], NULL, &do_pg_init,(void *)pgname);
+    //cout<< pagenames[k] << endl;
+    struct arg_struct *args = new arg_struct(k,pagenames[k]);
+    threads[k] = thread(&wiki::pg_init,this,args);
   }
   for (int i = 0; i < num_pgs; i++) {
-    pthread_join(threads[i], NULL);
+    threads[i].join();
   }
+
+  // for(int i = 0; i < num_pgs; i++){
+  //   cout << allpages[i]->noun<<endl;
+  // }
 }
 
  void wiki::compare(vector<vector<int>> grid, page* page) {
-    for (auto i : allpages) {  // other pages
-      int countcommonwords = 0;
-      for (auto j : i->words) {  // interate through map of other page
-        string currword = j.first;
-        ////cout << currword << endl;
-        if (currword == name) {
-          countcommonwords = -1;
-          break;
-        }
-        if (curr->words.find(currword) != curr->words.end()) {
-          grid[curr->id][i->id] +=
-              curr->words[currword] / static_cast<float>(curr->pglength) +
-              j.second / static_cast<float>(i->pglength);
-          grid[i->id][curr->id] +=
-              curr->words[currword] / static_cast<float>(curr->pglength) +
-              j.second / static_cast<float>(i->pglength);
-          countcommonwords++;
-        }
-      }
-      if (countcommonwords != -1) {  // if contains name
-        grid[curr->id][i->id] *= countcommonwords;
-        grid[i->id][curr->id] *= countcommonwords;
-      } else {
-        grid[curr->id][i->id] = 9999999;
-        grid[i->id][curr->id] = 9999999;
-      }
-      grid[curr->id][curr->id] = 9999999;
-      // //cout << " = " << grid[i->id * curr->id] << endl;
-    }
+    // for (auto i : allpages) {  // other pages
+    //   int countcommonwords = 0;
+    //   for (auto j : i->words) {  // interate through map of other page
+    //     string currword = j.first;
+    //     ////cout << currword << endl;
+    //     if (currword == name) {
+    //       countcommonwords = -1;
+    //       break;
+    //     }
+    //     if (curr->words.find(currword) != curr->words.end()) {
+    //       grid[curr->id][i->id] +=
+    //           curr->words[currword] / static_cast<float>(curr->pglength) +
+    //           j.second / static_cast<float>(i->pglength);
+    //       grid[i->id][curr->id] +=
+    //           curr->words[currword] / static_cast<float>(curr->pglength) +
+    //           j.second / static_cast<float>(i->pglength);
+    //       countcommonwords++;
+    //     }
+    //   }
+    //   if (countcommonwords != -1) {  // if contains name
+    //     grid[curr->id][i->id] *= countcommonwords;
+    //     grid[i->id][curr->id] *= countcommonwords;
+    //   } else {
+    //     grid[curr->id][i->id] = 9999999;
+    //     grid[i->id][curr->id] = 9999999;
+    //   }
+    //   grid[curr->id][curr->id] = 9999999;
+    //   // //cout << " = " << grid[i->id * curr->id] << endl;
+    // }
  }
 
 
@@ -214,8 +212,8 @@ vector<string> wiki::retruneight() {
   stringstream s;
   s << "chosen: ";
   for (auto i : pathh.begin()->second) {
-    s << allpages[i]->name << " -> ";
-    toreturn.push_back(allpages[i]->name);
+    s << allpages[i]->noun << " -> ";
+    toreturn.push_back(allpages[i]->noun);
   }
 
   cout << s.str() << endl;
@@ -344,18 +342,19 @@ int main() {
   for (const auto &entry : filesystem::directory_iterator(path)) {
     count --;
     inputwords.push_back(entry.path());
-    cout << entry.path() << endl;
-    if (count == 0) {
-      break;
-    }
+    // cout << entry.path() << endl;
+      // if (count == 0) {
+      //   break;
+      // }
   }
 
   if (inputwords.size() ==0) {
 
     return 0;  }
   wiki mywiki = wiki(inputwords);
-  vector<string> out = mywiki.retruneight();
-  for (int i = 0; i < out.size(); i++) {
-    cout << "@ i " << i << " = " << out[i] << endl;
-  }
+  // vector<string> out = mywiki.retruneight();
+  // for (int i = 0; i < out.size(); i++) {
+  //   cout << "@ i " << i << " = " << out[i] << endl;
+  // }
+  return 1;
 }
