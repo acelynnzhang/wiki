@@ -11,7 +11,6 @@
 #include <filesystem>
 #include <queue>
 #include <thread>
-#include <atomic>
 
 using namespace std;
 struct page {
@@ -51,18 +50,19 @@ struct arg_struct {
 class wiki {
  public:
   wiki(const vector<string>& pagenames);
-    void getgrid();
+    vector<vector<float>> getgrid() { return grid; }
     vector<string> retruneight();
     
  protected:
-  void wiki::bfs_on_lvl(vector<int> start, vector<bool> visited);
+  pair<vector<int>, float> bfs(vector<int> start, float tsum);
+  pair<vector<int>, float> bfsnarrow(vector<int> start, float tsum, vector<int> select);
   string extract_word(string name);
-  vector<pair<vector<int>, float>> best_with_start;
+  vector<float> gridd;
   vector<vector<float>> grid;  // 2d grid of intersections(same words) of pages
   vector<string> getpage(const string &pagename);
   int num_pgs;
   vector<page*> allpages;
   int mynum = 7;
-  void compare(page* page);
+  void compare(vector<vector<int>> grid, page* page);
   void *pg_init(arg_struct* args);
 };
