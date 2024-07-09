@@ -102,7 +102,7 @@ float wiki::sumvec(vector<float> v) {
   return toreturn;
 }
 
-vector<float> wiki::addvecf(vector<float> fir, vector<float> sec) {
+vector<float> wiki::addvecf(vector<float> fir, vector<float> sec, vector<int> added) {
   vector<float> toreturn;
   int f = 0;
   int s = 0;

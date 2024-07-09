@@ -18,7 +18,7 @@ parallelbfs::parallelbfs(const vector<string> &pagenames) {
   grid.resize(num_pgs);
   allpages.resize(num_pgs);
   thread threads[num_pgs];
-  vector<arg_struct*> argall(num_pgs);
+  vector<arg_struct *> argall(num_pgs);
   for (size_t k = 0; k < num_pgs; k++) {
     // cout<< pagenames[k] << endl;
     struct arg_struct *args = new arg_struct(k, pagenames[k]);
@@ -46,10 +46,10 @@ parallelbfs::parallelbfs(const vector<string> &pagenames) {
 
 void parallelbfs::compare(page *curr) {
   grid[curr->id].resize(num_pgs);
-  for (auto i : allpages) {  // other pages
+  for (auto i : allpages) { // other pages
     if (i->noun != curr->noun) {
       int countcommonwords = 0;
-      for (auto j : i->words) {  // interate through map of other page
+      for (auto j : i->words) { // interate through map of other page
         string currword = j.first;
         if (currword == curr->noun) {
           countcommonwords = -1;
@@ -62,7 +62,7 @@ void parallelbfs::compare(page *curr) {
           countcommonwords++;
         }
       }
-      if (countcommonwords != -1) {  // if contains name
+      if (countcommonwords != -1) { // if contains name
         grid[curr->id][i->id] *= countcommonwords;
       } else {
         grid[curr->id][i->id] = static_cast<float>(INT32_MAX);
@@ -95,6 +95,13 @@ void parallelbfs::search() {
   float currsmall = static_cast<float>(INT32_MAX);
   vector<int> currpath;
   for (int i = 0; i < num_pgs; i++) {
+    cout << "sum=" << currsmall << endl;
+    stringstream s;
+    s << "currpath: ";
+    for (auto i : currpath) {
+      s << allpages[i]->noun << " -> ";
+    }
+    cout << s.str() << endl;
     if (*sums[i] < currsmall) {
       currpath = *paths[i];
     }
@@ -122,16 +129,16 @@ void parallelbfs::bfs(vector<int> start, vector<float> weights,
   } else {
     int currloc = 0;
     for (int i = 0; i < num_pgs; i++) {
-      if (i == start[currloc]) {  // if already in path
+      if (i == start[currloc]) { // if already in path
         currloc++;
       } else {
-        vector<float> weights2 = addvecf(weights, grid[i]);
         vector<int> start2 = start;
-        start2.push_back(i); 
-        bfs(start2, weights2 , lowestsum, path);
+        start2.push_back(i);
+        vector<float> weights2 = addvecf(weights, grid[i], start2);
+        bfs(start2, weights2, lowestsum, path);
       }
     }
-   }
+  }
 }
 
 int main() {

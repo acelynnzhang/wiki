@@ -67,7 +67,7 @@ class wiki {
  protected:
 
   float sumvec(vector<float> v);
-  vector<float> addvecf(vector<float> fir, vector<float> sec);
+  vector<float> addvecf(vector<float> fir, vector<float> sec, vector<int> path);
   void sortnoun(string pathh, string changeto);
   map<string, string> genmap(string path);
   string remove_punct(const string& str);
