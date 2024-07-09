@@ -47,10 +47,10 @@ bfs::bfs(const vector<string> &pagenamen) {
         grid[curr->id][i->id] *= countcommonwords;
         grid[i->id][curr->id] *= countcommonwords;
       } else {
-        grid[curr->id][i->id] = 9999999;
-        grid[i->id][curr->id] = 9999999;
+        grid[curr->id][i->id] = static_cast<float>(INT32_MAX);
+        grid[i->id][curr->id] = static_cast<float>(INT32_MAX);
       }
-      grid[curr->id][curr->id] = 9999999;
+      grid[curr->id][curr->id] = static_cast<float>(INT32_MAX);
       // //cout << " = " << grid[i->id * curr->id] << endl;
     }
     allpages.push_back(curr);
