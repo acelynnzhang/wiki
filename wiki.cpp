@@ -2,6 +2,8 @@
 
 using namespace std;
 
+float maxfloat = static_cast<float>(INT32_MAX);
+
 void wiki::getgrid() {
   stringstream s;
   s << '[';
@@ -36,7 +38,7 @@ void wiki::sortnoun(string pathh, string changeto) {
 
   std::filesystem::create_directories("./onlynoun");
 
-  for (auto& entry : filesystem::directory_iterator(path)) {
+  for (auto &entry : filesystem::directory_iterator(path)) {
     string temp = static_cast<string>(entry.path());
     string name;
     for (int k = pathh.size() + 1; k < temp.size() - 4; k++) {
@@ -54,21 +56,21 @@ void wiki::sortnoun(string pathh, string changeto) {
         // src.close();
         // dst.close();
 
-      } catch (std::filesystem::filesystem_error& e) {
+      } catch (std::filesystem::filesystem_error &e) {
         std::cout << e.what() << '\n';
       }
     }
   }
 }
 
-string wiki::remove_punct(const string& str) {
+string wiki::remove_punct(const string &str) {
   string ret;
   remove_copy_if(str.begin(), str.end(), std::back_inserter(ret),
                  [](int c) { return std::ispunct(c); });
   return ret;
 }
 
-vector<string> wiki::getpage(const string& pagename) {
+vector<string> wiki::getpage(const string &pagename) {
   ifstream words(pagename);
   vector<string> out;
   if (words.is_open()) {
@@ -92,38 +94,46 @@ string wiki::extract_word(string page_name) {
   return name;
 }
 
-float wiki::sumvec(vector<float> v) {
+float wiki::sumvec(vector<float> v,
+                            vector<int> added) {
   float toreturn;
-  for (auto i : v) {
-    if (i != static_cast<float>(INT32_MAX)) {
-      toreturn += i;
+  for (auto i : added) {
+    if (v[i] == static_cast<float>(INT32_MAX)) {
+      return static_cast<float>(INT32_MAX);
     }
+    //cout<<v[i]<<endl;
+    toreturn += v[i];
   }
   return toreturn;
+  
 }
 
-vector<float> wiki::addvecf(vector<float> fir, vector<float> sec, vector<int> added) {
+vector<float> wiki::addvecf(vector<float> fir, vector<float> sec) {
   vector<float> toreturn;
   int f = 0;
   int s = 0;
   for (int i = 0; i < max(fir.size(), sec.size()); i++) {
-    if (i >= fir.size() || fir[i] == static_cast<float>(INT32_MAX)) {
-      f = 0;
-    } else {
-      f = fir[i];
+    if (fir[i] == maxfloat || sec[i] == maxfloat) {
+      toreturn.push_back(maxfloat);
+    } else{
+      toreturn.push_back(fir[i] + sec[i]);
     }
-    if (i >= sec.size() || sec[i] == static_cast<float>(INT32_MAX)) {
-      s = 0;
-    } else {
-      s = sec[i];
-    }
-    toreturn.push_back(f + s);
+    
   }
   return toreturn;
 }
 
 wiki::~wiki() {
-  for(auto *pg : allpages) {
+  for (auto *pg : allpages) {
     delete pg;
   }
+}
+
+void wiki::printpath(vector<int> currpath) {
+  stringstream s;
+  s << "path: ";
+  for (auto i : currpath) {
+    s << allpages[i]->noun << '(' << i << ')' << " -> ";
+  }
+  cout << s.str() << endl;
 }

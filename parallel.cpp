@@ -67,7 +67,7 @@ void parallelbfs::compare(page *curr) {
       } else {
         grid[curr->id][i->id] = static_cast<float>(INT32_MAX);
       }
-      grid[curr->id][curr->id] = static_cast<float>(INT32_MAX);
+      grid[curr->id][curr->id] = 0;
     }
   }
 }
@@ -92,53 +92,82 @@ void parallelbfs::search() {
     threads[i].join();
   }
 
-  float currsmall = static_cast<float>(INT32_MAX);
+  float currsmall = maxfloat;
   vector<int> currpath;
   for (int i = 0; i < num_pgs; i++) {
-    cout << "sum=" << currsmall << endl;
-    stringstream s;
-    s << "currpath: ";
-    for (auto i : currpath) {
-      s << allpages[i]->noun << " -> ";
-    }
-    cout << s.str() << endl;
+    //cout<< " sum "<< *sums[i] << ' '<<endl;
+    printpath(*paths[i]);
     if (*sums[i] < currsmall) {
       currpath = *paths[i];
+      currsmall = *sums[i];
     }
-    delete sums[i];
-    delete paths[i];
+    // delete sums[i];
+    // delete paths[i];
   }
 
-  cout << "sum=" << currsmall << endl;
-  stringstream s;
-  s << "chosen: ";
-  for (auto i : currpath) {
-    s << allpages[i]->noun << " -> ";
-  }
-  cout << s.str() << endl;
+  cout << "final= " << currsmall << endl;
+  printpath(currpath);
 }
 
 void parallelbfs::bfs(vector<int> start, vector<float> weights,
                       float *lowestsum, vector<int> *path) {
-  if (start.size() == 4) {
-    if (sumvec(weights) < *lowestsum) {
-      *lowestsum = sumvec(weights);
+  if (start[0] == 1) {
+  }
+  if (start.size() == 3) {
+    float tot = sumvec(weights, start);
+    if ( tot< *lowestsum) {
+      printpath(start);
+      *lowestsum = tot;
       *path = start;
+
+      cout << "\n change" << "loewsetsum "<<*lowestsum <<"\n" << endl;
+      printpath(*path);
     }
     return;
   } else {
     int currloc = 0;
     for (int i = 0; i < num_pgs; i++) {
+      // if (start[0] == 1) {
+      //   cout << "i = " << i << "vs currloc = " << start[currloc] << endl;
+      //   // cout<< "\n -------------------- \n" <<endl;
+      // }
       if (i == start[currloc]) { // if already in path
-        currloc++;
+        // if (start[0] == 1) {
+        //   printpath(start);
+        //   cout << "currloc now " << start[currloc] << endl;
+        // }
+        if (currloc < start.size() - 1) {
+          currloc++;
+        }
+
       } else {
         vector<int> start2 = start;
-        start2.push_back(i);
-        vector<float> weights2 = addvecf(weights, grid[i], start2);
+        vector<int>::iterator iter = start2.begin();
+        // if (start[0] == 1) {
+        //   cout << "adding " << i << endl;
+        // }
+
+        for (int k = 0; k < start2.size(); k++) { // insert in order
+          if (i < start2[k]) {
+            start2.insert(iter, i);
+            break;
+          }
+          iter++;
+        }
+        if (start2.size() == start.size()) {
+          start2.push_back(i);
+        }
+        // if (start[0] == 1) {
+        //   cout<<"path after" <<endl;
+        //   printpath(start2);
+        // }
+
+        vector<float> weights2 = addvecf(weights, grid[i]);
         bfs(start2, weights2, lowestsum, path);
       }
     }
   }
+  return;
 }
 
 int main() {
@@ -146,7 +175,7 @@ int main() {
   // filter_out_noun("./wiki2-nouns", "./onlynoun");
   //  int count = 0;
   string path = "./onlynoun";
-  int count = 20;
+  int count = 10;
   for (const auto &entry : filesystem::directory_iterator(path)) {
     count--;
     inputwords.push_back(entry.path());
@@ -237,9 +266,16 @@ int main() {
 //       if (i == start[currloc]) {  // if already in path
 //         currloc++;
 //       } else {
-//         weights = addvecf(weights, grid[i]);
-//         start.push_back(i);  // update changes
-//         threads[i] = thread(&parallelbfs::bfs_on_lvl, this, start, weights,
+// vector<int> start2 = start;
+// vector<int>::iterator iter = start2.begin();
+// for (iter; iter < start2.end(); iter++) { //insert in order
+//   if(i < *iter) {
+//     start2.insert(iter, i);
+//   }
+// }
+// start2.push_back(i);
+// vector<float> weights2 = addvecf(weights, grid[i], start2);
+//         threads[i] = thread(&parallelbfs::bfs_on_lvl, this, start2, weights2,
 //                             ref(a_path), ref(a_best));
 //       }
 //     }

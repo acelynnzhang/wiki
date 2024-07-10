@@ -19,7 +19,7 @@
 
 using namespace std;
 
-
+extern float maxfloat;
 
 struct page {
   string noun;
@@ -65,9 +65,9 @@ class wiki {
   ~wiki();
 
  protected:
-
-  float sumvec(vector<float> v);
-  vector<float> addvecf(vector<float> fir, vector<float> sec, vector<int> path);
+  void printpath(vector<int> currpath);
+  float sumvec(vector<float> v, vector<int> path);
+  vector<float> addvecf(vector<float> fir, vector<float> sec);
   void sortnoun(string pathh, string changeto);
   map<string, string> genmap(string path);
   string remove_punct(const string& str);
